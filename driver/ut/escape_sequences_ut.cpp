@@ -219,10 +219,16 @@ TEST(EscapeSequencesCase, LOCATE) {
 }
 
 TEST(EscapeSequencesCase, LCASE) {
-    ASSERT_EQ(replaceEscapeSequences("{fn LCASE(`dm_ExperimentsData`.`Campaign`)}"), "lowerUTF8(`dm_ExperimentsData`.`Campaign`)");
+    ASSERT_EQ(replaceEscapeSequences("{fn LCASE(`dm_ExperimentsData`.`Campaign`)}"),
+		"lowerUTF8(`dm_ExperimentsData`.`Campaign`)");
 }
 
 TEST(EscapeSequencesCase, LTRIM) {
     ASSERT_EQ(replaceEscapeSequences("{fn LTRIM(`dm_ExperimentsData`.`Campaign`)}"),
-        "replaceRegexpOne(`dm_ExperimentsData`.`Campaign`, '^\\\\s+', '')");
+		"replaceRegexpOne(`dm_ExperimentsData`.`Campaign`, '^\\\\s+', '')");
+}
+
+TEST(EscapeSequencesCase, WEEK) {
+    ASSERT_EQ(replaceEscapeSequences("{fn WEEK(DateTime)}"),
+		"toRelativeWeekNum(DateTime) - toRelativeWeekNum(toStartOfYear(DateTime)) + 1");
 }
