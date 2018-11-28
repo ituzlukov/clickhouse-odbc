@@ -113,6 +113,7 @@ void Statement::prepareQuery(const std::string & q) {
     query = q;
     if (scan_escape_sequences) {
         prepared_query = replaceEscapeSequences(query);
+		LOG("\nsorce query: " << q << "\nprepared query: " << prepared_query);
     } else {
         prepared_query = q;
     }
