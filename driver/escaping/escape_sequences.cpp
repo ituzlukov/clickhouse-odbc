@@ -109,7 +109,7 @@ string processParentheses(const StringView seq, Lexer & lex) {
 
     return result;
 }
-
+string processFunction(const StringView seq, Lexer & lex);
 string processIdentOrFunction(const StringView seq, Lexer & lex) {
     while (lex.Match(Token::SPACE)) {
     }
@@ -131,7 +131,10 @@ string processIdentOrFunction(const StringView seq, Lexer & lex) {
         lex.Consume();
     } else if (function_map_strip_params.find(token.type) != function_map_strip_params.end()) {
         result += function_map_strip_params.at(token.type);
-    } else {
+	}
+	else if (token.type == Token::EXTRACT) {
+		result += processFunction(seq, lex);
+	} else {
         return "";
     }
     while (lex.Match(Token::SPACE)) {
@@ -201,7 +204,6 @@ string processFunction(const StringView seq, Lexer & lex) {
 
         if (!lex.Match(Token::COMMA))
             return seq.to_string();
-
 
         auto rdate = processIdentOrFunction(seq, lex);
         if (rdate.empty())
@@ -281,7 +283,9 @@ string processFunction(const StringView seq, Lexer & lex) {
         return "( toRelativeDayNum(" + param + ") - toRelativeDayNum(toStartOfYear(" + param + ")) + 1 )";
 
     } else if (function_map.find(fn.type) != function_map.end()) {
-        string result = function_map.at(fn.type);
+		if (!lex.Match(Token::LPARENT))
+			return seq.to_string();
+        string result = function_map.at(fn.type) + '(';
         auto func = result;
         lex.SetEmitSpaces(true);
         while (true) {
@@ -293,7 +297,15 @@ string processFunction(const StringView seq, Lexer & lex) {
                 lex.SetEmitSpaces(false);
                 result += processEscapeSequencesImpl(seq, lex);
                 lex.SetEmitSpaces(true);
-            } else if (tok.type == Token::EOS || tok.type == Token::INVALID) {
+            }
+			else if (tok.type == Token::LPARENT) {
+				result += processParentheses(seq, lex);
+			}
+			else if (tok.type == Token::RPARENT) {
+				lex.Consume();
+				result += ')';
+				break;
+			} else if (tok.type == Token::EOS || tok.type == Token::INVALID) {
                 break;
             } else if (tok.type == Token::EXTRACT) {
                 result += processFunction(seq, lex);

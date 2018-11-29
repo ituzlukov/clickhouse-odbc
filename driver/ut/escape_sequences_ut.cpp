@@ -33,7 +33,7 @@ TEST(EscapeSequencesCase, ParseConvert6) {
 
 TEST(EscapeSequencesCase, ParseConvert6_1) {
     ASSERT_EQ(replaceEscapeSequences("SELECT  {fn   CONVERT(  {fn   ROUND(  1.1  +  2.4  ,  1  )  }  ,  SQL_BIGINT  )  }"),
-        "SELECT  toInt64(round(  1.1  +  2.4  ,  1  )  )");
+        "SELECT  toInt64(round(  1.1  +  2.4  ,  1  ))");
 }
 
 
@@ -111,35 +111,68 @@ TEST(EscapeSequencesCase, Parsetimestampdiff) {
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd1) {
-    ASSERT_EQ(replaceEscapeSequences("SELECT {fn TIMESTAMPADD(SQL_TSI_YEAR, 1, {fn CURDATE()})}"), "SELECT addYears(today(), 1)");
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_YEAR, 1, {fn CURDATE()})}"),
+		"SELECT addYears(today(), 1)");
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd2) {
-    ASSERT_EQ(replaceEscapeSequences("SELECT {fn  TIMESTAMPADD(  SQL_TSI_YEAR  ,  1  ,  {fn  CURDATE()  }  )  }"),
-        "SELECT addYears(today()  , 1)");
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn  TIMESTAMPADD(  SQL_TSI_YEAR  ,  1  ,  {fn  CURDATE()  }  )  }"),
+        "SELECT addYears(today(), 1)");
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd3) {
-    ASSERT_EQ(replaceEscapeSequences("SELECT {fn TIMESTAMPADD(SQL_TSI_DAY,1,CAST({fn CURRENT_TIMESTAMP(0)} AS DATE))}"),
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_DAY,1,CAST({fn CURRENT_TIMESTAMP(0)} AS DATE))}"),
         "SELECT addDays(CAST(now() AS DATE), 1)");
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd4) {
-    ASSERT_EQ(replaceEscapeSequences("SELECT {fn TIMESTAMPADD( SQL_TSI_DAY , 1 , CAST( {fn CURRENT_TIMESTAMP( 0 ) }  AS  DATE ) ) } "),
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD( SQL_TSI_DAY , 1 , CAST( {fn CURRENT_TIMESTAMP( 0 ) }  AS  DATE ) ) } "),
         "SELECT addDays(CAST( now()  AS  DATE ), 1) ");
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd5) {
-    ASSERT_EQ(replaceEscapeSequences("SELECT {fn TIMESTAMPADD(SQL_TSI_DAY, CAST(CAST(1 AS DATE) AS DATE), 1)}"),
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_DAY, CAST(CAST(1 AS DATE) AS DATE), 1)}"),
         "SELECT addDays(1, CAST(CAST(1 AS DATE) AS DATE))");
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd6) {
-    ASSERT_EQ(replaceEscapeSequences(      "SELECT {fn TIMESTAMPADD(SQL_TSI_DAY,(({fn MOD(({fn DAYOFWEEK(CAST(`publishers_report`.`install_date` AS DATE))}), 7)})),1)}"
-    ), "SELECT addDays(1, ((modulo((if(toDayOfWeek(CAST(`publishers_report`.`install_date` AS DATE)) = 7, 1, toDayOfWeek(CAST(`publishers_report`.`install_date` AS DATE)) + 1)), 7))))");
+    ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_DAY,(({fn MOD(({fn DAYOFWEEK(CAST(`publishers_report`.`install_date` AS DATE))}), 7)})),1)}"),
+		"SELECT addDays(1, ((modulo((if(toDayOfWeek(CAST(`publishers_report`.`install_date` AS DATE)) = 7, 1, toDayOfWeek(CAST(`publishers_report`.`install_date` AS DATE)) + 1)), 7))))");
 }
 
+TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd1) {
+	ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_HOUR,EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE))}"),
+		"SELECT addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+}
 
+TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd2) {
+	ASSERT_EQ(replaceEscapeSequences(
+		"SELECT {fn TIMESTAMPADD(SQL_TSI_MINUTE, EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`), "
+		"{ fn TIMESTAMPADD(SQL_TSI_HOUR,EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE)) })}")
+		,
+		"SELECT addMinutes(addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
+		"EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+}
+
+TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd3) {
+	ASSERT_EQ(replaceEscapeSequences(
+		"SELECT "
+		"{fn TIMESTAMPADD(SQL_TSI_SECOND, EXTRACT(SECOND FROM `tbl_LyrisActiveMsgPool`.`CreateDate`), "
+		"{ fn TIMESTAMPADD(SQL_TSI_MINUTE,EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),"
+		"{ fn TIMESTAMPADD(SQL_TSI_HOUR,EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE)) }) })}")
+		,
+		"SELECT addSeconds(addMinutes(addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), "
+		"EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
+		"EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
+		"EXTRACT(SECOND FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+}
 
 TEST(EscapeSequencesCase, ParseCurrentTimestamp1) {
     ASSERT_EQ(replaceEscapeSequences("SELECT {fn CURRENT_TIMESTAMP}"), "SELECT now()");
@@ -230,5 +263,5 @@ TEST(EscapeSequencesCase, LTRIM) {
 
 TEST(EscapeSequencesCase, WEEK) {
     ASSERT_EQ(replaceEscapeSequences("{fn WEEK(DateTime)}"),
-		"toRelativeWeekNum(DateTime) - toRelativeWeekNum(toStartOfYear(DateTime)) + 1");
+		"toRelativeWeekNum(DateTime) - toRelativeWeekNum(toStartOfYear(DateTime))  + 1");
 }
