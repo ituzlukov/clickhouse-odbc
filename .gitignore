@@ -23,6 +23,7 @@ vs/driver32w/.vs/*
 vs/driver32w/Debug/*
 vs/driver32w/Release/*
 vs/driver64/.vs/*
+vs/driver64/Release/
 vs/driver64/x64/Debug/*
 vs/driver64/x64/Release/*
 vs/driver64w/.vs/*
@@ -36,3 +37,7 @@ vs/installer32/obj/*
 vs/installer32/bin/*
 vs/installer64/obj/*
 vs/installer64/bin/*
+vs/UpgradeLog.htm
+vs/driver64_ut/x64/
+vs/driver32_ut/x64/
+vs/driver32_ut/Release/
