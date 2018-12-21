@@ -36,6 +36,13 @@ TEST(EscapeSequencesCase, ParseConvert6_1) {
         "SELECT  toInt64(round(  1.1  +  2.4  ,  1  ))");
 }
 
+TEST(EscapeSequencesCase, ParseConvert7) {
+	ASSERT_EQ (
+		replaceEscapeSequences(
+		"SELECT SUM({fn CONVERT((CASE WHEN (`dm_CompanyWideInstallation`.`uc_cmp` = 'australia') THEN `dm_CompanyWideInstallation`.`Soda TB` ELSE NULL END), SQL_BIGINT)}) AS `sum_Calculation_BAGIHGAEJEABBCEIGEC_ok` FROM `dm_CompanyWideInstallation` HAVING(COUNT(1) > 0)"),
+		"SELECT SUM(toInt64((CASE WHEN (`dm_CompanyWideInstallation`.`uc_cmp` = 'australia') THEN `dm_CompanyWideInstallation`.`Soda TB` ELSE NULL END))) AS `sum_Calculation_BAGIHGAEJEABBCEIGEC_ok` FROM `dm_CompanyWideInstallation` HAVING(COUNT(1) > 0)"
+	);
+}
 
 TEST(EscapeSequencesCase, ParseConcat) {
     ASSERT_EQ(replaceEscapeSequences("SELECT {fn CONCAT('a', 'b')}"), "SELECT concat('a', 'b')");

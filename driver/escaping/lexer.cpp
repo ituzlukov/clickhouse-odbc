@@ -180,7 +180,7 @@ Token Lexer::NextToken() {
                             if (cur_ < end_)
                                 ++cur_;
                         }
-                        if (!isalpha(*cur_) && !isdigit(*cur_) && *cur_ != '_' && *cur_ != '.') {
+                        if (!isalpha(*cur_) && !isdigit(*cur_) && *cur_ != '_' && *cur_ != '.' && *cur_ != ' ') {
                             return Token{Token::INVALID, StringView(st, cur_)};
                         }
                     }
