@@ -1,6 +1,7 @@
 #include <escaping/escape_sequences.h>
 #include <gtest/gtest.h>
 
+
 TEST(EscapeSequencesCase, ParseConvert1) {
     ASSERT_EQ(replaceEscapeSequences("SELECT {fn CONVERT(1, SQL_BIGINT)}"), "SELECT toInt64(1)");
 }
@@ -110,11 +111,13 @@ TEST(EscapeSequencesCase, ParseTimestampdiff2) {
 }
 
 TEST(EscapeSequencesCase, Parsetimestampdiff) {
-    ASSERT_EQ(replaceEscapeSequences(
-                  "SELECT {fn TIMESTAMPDIFF(SQL_TSI_DAY,CAST(`activity`.`min_activation_yabrowser` AS DATE),CAST(`activity`.`date` AS "
-                  "DATE))} AS `Calculation_503558746242125826`, SUM({fn CONVERT(1, SQL_BIGINT)}) AS `sum_Number_of_Records_ok`"),
+    ASSERT_EQ(
+		replaceEscapeSequences(
+        "SELECT {fn TIMESTAMPDIFF(SQL_TSI_DAY,CAST(`activity`.`min_activation_yabrowser` AS DATE),CAST(`activity`.`date` AS "
+        "DATE))} AS `Calculation_503558746242125826`, SUM({fn CONVERT(1, SQL_BIGINT)}) AS `sum_Number_of_Records_ok`"),
         "SELECT dateDiff('day',CAST(`activity`.`min_activation_yabrowser` AS DATE),CAST(`activity`.`date` AS DATE)) AS "
-        "`Calculation_503558746242125826`, SUM(toInt64(1)) AS `sum_Number_of_Records_ok`");
+        "`Calculation_503558746242125826`, SUM(toInt64(1)) AS `sum_Number_of_Records_ok`"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseTimestampadd1) {
@@ -154,22 +157,27 @@ TEST(EscapeSequencesCase, ParseTimestampadd6) {
 }
 
 TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd1) {
-	ASSERT_EQ(replaceEscapeSequences(
+	ASSERT_EQ(
+		replaceEscapeSequences(
 		"SELECT {fn TIMESTAMPADD(SQL_TSI_HOUR,EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE))}"),
-		"SELECT addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+		"SELECT addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd2) {
-	ASSERT_EQ(replaceEscapeSequences(
+	ASSERT_EQ(
+		replaceEscapeSequences(
 		"SELECT {fn TIMESTAMPADD(SQL_TSI_MINUTE, EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`), "
 		"{ fn TIMESTAMPADD(SQL_TSI_HOUR,EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE)) })}")
 		,
 		"SELECT addMinutes(addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
-		"EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+		"EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd3) {
-	ASSERT_EQ(replaceEscapeSequences(
+	ASSERT_EQ(
+		replaceEscapeSequences(
 		"SELECT "
 		"{fn TIMESTAMPADD(SQL_TSI_SECOND, EXTRACT(SECOND FROM `tbl_LyrisActiveMsgPool`.`CreateDate`), "
 		"{ fn TIMESTAMPADD(SQL_TSI_MINUTE,EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`),"
@@ -178,7 +186,8 @@ TEST(EscapeSequencesCase, ParseExtractInsideTimestampadd3) {
 		"SELECT addSeconds(addMinutes(addHours(CAST(`tbl_LyrisActiveMsgPool`.`CreateDate` AS DATE), "
 		"EXTRACT(HOUR FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
 		"EXTRACT(MINUTE FROM `tbl_LyrisActiveMsgPool`.`CreateDate`)), "
-		"EXTRACT(SECOND FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))");
+		"EXTRACT(SECOND FROM `tbl_LyrisActiveMsgPool`.`CreateDate`))"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseCurrentTimestamp1) {
@@ -189,17 +198,27 @@ TEST(EscapeSequencesCase, ParseCurrentTimestamp2) {
 }
 
 TEST(EscapeSequencesCase, ParseExtract1) {
-    ASSERT_EQ(replaceEscapeSequences(
-                  "SELECT CAST({fn TRUNCATE(EXTRACT(YEAR FROM `odbc1`.`date`),0)} AS INTEGER) AS `yr_date_ok` FROM `test`.`odbc1`"),
-        "SELECT CAST(trunc(EXTRACT(YEAR FROM `odbc1`.`date`),0) AS INTEGER) AS `yr_date_ok` FROM `test`.`odbc1`");
+    ASSERT_EQ(
+		replaceEscapeSequences(
+		"SELECT CAST({fn TRUNCATE(EXTRACT(YEAR FROM `odbc1`.`date`),0)} AS INTEGER) AS `yr_date_ok` FROM `test`.`odbc1`"),
+        "SELECT CAST(trunc(EXTRACT(YEAR FROM `odbc1`.`date`),0) AS INTEGER) AS `yr_date_ok` FROM `test`.`odbc1`"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseExtract2) {
     ASSERT_EQ(
-        replaceEscapeSequences("SELECT CAST({fn TRUNCATE(EXTRACT(YEAR FROM `Custom_SQL_Query`.`date`),0)} AS INTEGER) AS `yr_date_ok`"),
+        replaceEscapeSequences(
+		"SELECT CAST({fn TRUNCATE(EXTRACT(YEAR FROM `Custom_SQL_Query`.`date`),0)} AS INTEGER) AS `yr_date_ok`"),
         "SELECT CAST(trunc(EXTRACT(YEAR FROM `Custom_SQL_Query`.`date`),0) AS INTEGER) AS `yr_date_ok`"
-        //"SELECT CAST(trunc(toYear(`Custom_SQL_Query`.`date`), 0) AS INTEGER) AS `yr_date_ok`"
     );
+}
+
+TEST(EscapeSequencesCase, ParseExtract3) {
+	ASSERT_EQ(
+		replaceEscapeSequences(
+		"CAST({ fn TRUNCATE(EXTRACT(DAY FROM `vw_EmailCollectionSingle`.`weekDate`),0) } AS INTEGER)"),
+		"CAST(trunc(EXTRACT(DAY FROM `vw_EmailCollectionSingle`.`weekDate`),0) AS INTEGER)"
+	);
 }
 
 TEST(EscapeSequencesCase, ParseQuarter) {

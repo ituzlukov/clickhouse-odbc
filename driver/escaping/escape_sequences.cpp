@@ -310,7 +310,7 @@ string processFunction(const StringView seq, Lexer & lex) {
             } else if (tok.type == Token::EXTRACT) {
                 result += processFunction(seq, lex);
             } else {
-                if (func != "EXTRACT" && literal_map.find(tok.type) != literal_map.end()) {
+                if (func != "EXTRACT" && func != "EXTRACT(" && literal_map.find(tok.type) != literal_map.end()) {
                     result += literal_map.at(tok.type);
                 } else
                     result += tok.literal.to_string();
