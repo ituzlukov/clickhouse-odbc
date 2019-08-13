@@ -14,15 +14,19 @@
 # ./test.sh | grep -i error
 
 DSN=${DSN=clickhouse_localhost}
-[ -z $RUNNER ] && RUNNER=`which isql` && [ -n $RUNNER ] && RUNNER_PARAMS="-v -b"
+[ -z $RUNNER ] && RUNNER=`which isql` && [ -n $RUNNER ] && RUNNER_PARAMS0="-v -b"
+[ -z $RUNNER ] && RUNNER=`which iusql` && [ -n $RUNNER ] && RUNNER_PARAMS0="-v -b"
 [ -z $RUNNER ] && RUNNER=`which iodbctestw`
 [ -z $RUNNER ] && RUNNER=`which iodbctest`
 
 function q {
     echo "Asking [$*]"
     # DYLD_INSERT_LIBRARIES=/usr/local/opt/gcc/lib/gcc/8/libasan.5.dylib
-    echo "$*" | $RUNNER $DSN $RUNNER_PARAMS
+    # export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5
+    echo "$*" | $RUNNER $DSN $RUNNER_PARAMS0 $RUNNER_PARAMS
 }
+
+echo "Using: $RUNNER $DSN $RUNNER_PARAMS0 $RUNNER_PARAMS"
 
 q "SELECT * FROM system.build_options;"
 q "CREATE DATABASE IF NOT EXISTS test;"
@@ -46,8 +50,8 @@ q $'SELECT COUNT({fn ABS(`test`.`odbc1`.`ui64`)}) AS `TEMP_Calculation_559572257
 
 q $'SELECT SUM((CASE WHEN (`test`.`odbc1`.`ui64` * `test`.`odbc1`.`ui64`) < 0 THEN NULL ELSE {fn SQRT((`test`.`odbc1`.`ui64` * `test`.`odbc1`.`ui64`))} END)) AS `TEMP_Calculation_559572257701634065__1464080195__0_`, COUNT((CASE WHEN (`test`.`odbc1`.`ui64` * `test`.`odbc1`.`ui64`) < 0 THEN NULL ELSE {fn SQRT((`test`.`odbc1`.`ui64` * `test`.`odbc1`.`ui64`))} END)) AS `TEMP_Calculation_559572257701634065__2225718044__0_` FROM test.odbc1;'
 
-#SELECT (CASE WHEN (NOT = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string2` = 'True') THEN 1 WHEN NOT (NOT = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string2` = 'True') THEN 0 ELSE NULL END) AS `Calculation_597289912116125696`,
-#SUM({fn CONVERT(1, SQL_BIGINT)}) AS `sum_Number_of_Records_ok` FROM `test`.`odbc1` GROUP BY `Calculation_597289912116125696`, `string`, `ui64`
+# SELECT (CASE WHEN (NOT = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string2` = 'True') THEN 1 WHEN NOT (NOT = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string` = 'True') OR (`test`.`odbc1`.`string2` = 'True') THEN 0 ELSE NULL END) AS `Calculation_597289912116125696`,
+# SUM({fn CONVERT(1, SQL_BIGINT)}) AS `sum_Number_of_Records_ok` FROM `test`.`odbc1` GROUP BY `Calculation_597289912116125696`, `string`, `ui64`
 
 q "DROP TABLE IF EXISTS test.purchase_stat;"
 q "CREATE TABLE test.purchase_stat (purchase_id UInt64, purchase_date DateTime, offer_category UInt64, amount UInt64) ENGINE = Memory;"
@@ -168,6 +172,16 @@ q "INSERT INTO test.decimal (a, b, c, d, e, f, g, h, i, j) VALUES (42, 42, 42, 0
 q "INSERT INTO test.decimal (a, b, c, d, e, f, g, h, i, j) VALUES (-42, -42, -42, -0.42, -0.42, -0.42, -42.42, -42.42, -42.42, -42.42);"
 q "SELECT * FROM test.decimal;"
 
+q "drop table if exists test.lc;"
+q "create table test.lc (b LowCardinality(String)) engine=MergeTree order by b;"
+q "insert into test.lc select '0123456789' from numbers(100);"
+q "select count(), b from test.lc group by b;"
+q "select * from test.lc limit 10;"
+q "drop table test.lc;"
+
+
+# q "SELECT number, toString(number), toDate(number) FROM system.numbers LIMIT 10000;"
+
 echo "\n\n\nLast log:\n"
-#cat /tmp/clickhouse-odbc-stderr.$USER
+# cat /tmp/clickhouse-odbc-stderr.$USER
 tail -n200 /tmp/clickhouse-odbc.log

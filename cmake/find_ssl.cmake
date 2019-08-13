@@ -13,7 +13,7 @@ endif ()
 
 if (NOT USE_INTERNAL_SSL_LIBRARY)
     if (APPLE)
-        set (OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
+        set (OPENSSL_ROOT_DIR "/usr/local/opt/openssl" CACHE INTERNAL "")
         # https://rt.openssl.org/Ticket/Display.html?user=guest&pass=guest&id=2232
         if (USE_STATIC_LIBRARIES)
             message(WARNING "Disable USE_STATIC_LIBRARIES if you have linking problems with OpenSSL on MacOS")
@@ -48,7 +48,7 @@ if (NOT USE_INTERNAL_SSL_LIBRARY)
 
 endif ()
 
-if (NOT OPENSSL_FOUND AND NOT MISSING_INTERNAL_SSL_LIBRARY)
+if (NOT OPENSSL_LIBRARIES AND NOT MISSING_INTERNAL_SSL_LIBRARY)
     set (USE_INTERNAL_SSL_LIBRARY 1)
     set (OPENSSL_ROOT_DIR "${PROJECT_SOURCE_DIR}/contrib/ssl" CACHE INTERNAL "")
     set (OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include" CACHE INTERNAL "")
@@ -63,8 +63,6 @@ if (NOT OPENSSL_FOUND AND NOT MISSING_INTERNAL_SSL_LIBRARY)
     set (OPENSSL_FOUND 1 CACHE INTERNAL "")
 endif ()
 
-#TODO: to use with new poco
-if (0)
 # part from /usr/share/cmake-*/Modules/FindOpenSSL.cmake, with removed all "EXISTS "
 if(OPENSSL_FOUND)
   if(NOT TARGET OpenSSL::Crypto AND
@@ -127,7 +125,6 @@ if(OPENSSL_FOUND)
         INTERFACE_LINK_LIBRARIES OpenSSL::Crypto)
     endif()
   endif()
-endif()
 endif()
 
 message (STATUS "Using ssl=${OPENSSL_FOUND}: ${OPENSSL_INCLUDE_DIR} : ${OPENSSL_LIBRARIES}")
